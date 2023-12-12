@@ -1,9 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+
 require("dotenv").config();
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+
 // To import the models
 const UserModel = require("./models/User");
 
@@ -15,6 +19,7 @@ const bcryptSalt = bcrypt.genSaltSync(10);
 const jwtSecret = "ioujhyt67d89ew0iowjhgytfghsjdwiofv897we";
 
 // MIDDLEWARES
+app.use(cookieParser());
 app.use(express.json());
 
 app.use(
@@ -58,12 +63,15 @@ app.post("/login", async (req, res) => {
     const passwordOk = bcrypt.compareSync(password, loggedInUserDoc.password);
     if (passwordOk) {
       jwt.sign(
-        { email: loggedInUserDoc.email, id: loggedInUserDoc._id },
+        {
+          email: loggedInUserDoc.email,
+          id: loggedInUserDoc._id,
+        },
         jwtSecret,
         {},
         (err, token) => {
           if (err) throw err;
-          res.cookie("token", token).json("Password is correct!");
+          res.cookie("token", token).json(loggedInUserDoc);
         }
       );
     } else {
@@ -71,6 +79,21 @@ app.post("/login", async (req, res) => {
     }
   } else {
     res.json("User not found!");
+  }
+});
+
+// TO HANDLE COOKIE WHEN A USER LOG IN
+app.get("/profile", (req, res) => {
+  const { token } = req.cookies;
+  if (token) {
+    jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+      if (err) throw err;
+      const { name, email, _id } = await UserModel.findById(cookieData.id);
+
+      res.json({ name, email, _id });
+    });
+  } else {
+    res.json(null);
   }
 });
 
