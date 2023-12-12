@@ -1,7 +1,10 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const app = express();
 const cors = require("cors");
+require("dotenv").config();
 
+// MIDDLEWARES
 app.use(express.json());
 
 app.use(
@@ -11,6 +14,10 @@ app.use(
   })
 );
 
+// DATABASE CONNECTION
+mongoose.connect(process.env.MONGO_URL);
+
+// END POINTS
 app.get("/test", (req, res) => {
   res.json("test ok");
 });
@@ -23,4 +30,5 @@ app.post("/register", (req, res) => {
 
 app.listen(4000, () => {
   console.log("Server is running on port 4000!!!");
-});
+}); 
+
