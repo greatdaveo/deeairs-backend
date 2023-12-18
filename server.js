@@ -7,12 +7,12 @@ require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const imageDownloader = require("image-downloader");
 
 // To import the models
 const UserModel = require("./models/User");
 
 const app = express();
-
 // To encrypt the password
 const bcryptSalt = bcrypt.genSaltSync(10);
 // For JWT
@@ -21,6 +21,9 @@ const jwtSecret = "ioujhyt67d89ew0iowjhgytfghsjdwiofv897we";
 // MIDDLEWARES
 app.use(cookieParser());
 app.use(express.json());
+
+// Middleware to show the photo in the browser
+app.use("/uploads", express.static(__dirname + "/uploads"));
 
 app.use(
   cors({
@@ -49,7 +52,6 @@ app.post("/register", async (req, res) => {
 
     res.json(registeredUserDoc);
   } catch (err) {
-    alert(err);
     res.status(422).json(err);
   }
 });
@@ -99,8 +101,25 @@ app.get("/profile", (req, res) => {
 
 // TO HANDLE LOGOUT
 app.post("/logout", (req, res) => {
-  res.cookie("token", "").json(true)
-})
+  res.cookie("token", "").json(true);
+});
+
+// To HANDLE UPLOADED DOCUMENTS e.g photos
+
+app.post("/upload-by-link", async (req, res) => {
+  const { link } = req.body;
+  // To rename the url
+  const newName = "photo" + Date.now() + ".jpg";
+
+  const options = {
+    url: link,
+    dest: __dirname + "/uploads/" + newName,
+  };
+
+  await imageDownloader.image(options);
+  // res.json(__dirname + "/uploads/" + newName);
+  res.json(newName);
+});
 
 app.listen(4000, () => {
   console.log("Server is running on port 4000!!!");
