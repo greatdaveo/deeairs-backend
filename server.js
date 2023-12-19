@@ -8,6 +8,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const imageDownloader = require("image-downloader");
+const multer = require("multer");
+const fs = require("fs");
 
 // To import the models
 const UserModel = require("./models/User");
@@ -105,7 +107,6 @@ app.post("/logout", (req, res) => {
 });
 
 // To HANDLE UPLOADED DOCUMENTS e.g photos
-
 app.post("/upload-by-link", async (req, res) => {
   const { link } = req.body;
   // To rename the url
@@ -119,6 +120,24 @@ app.post("/upload-by-link", async (req, res) => {
   await imageDownloader.image(options);
   // res.json(__dirname + "/uploads/" + newName);
   res.json(newName);
+});
+
+// To Upload Photo from Device
+const photoMiddleware = multer({ dest: "uploads" });
+
+app.post("/upload", photoMiddleware.array("photos", 100), (req, res) => {
+  const uploadedFiles = [];
+
+  for (let i = 0; i < req.files.length; i++) {
+    const { path, originalname } = req.files[i];
+    const partOfOriginalName = originalname.split(".");
+    const ext = partOfOriginalName[partOfOriginalName.length - 1];
+    const newPath = path + "." + ext;
+    fs.renameSync(path, newPath);
+    uploadedFiles.push(newPath.replace("uploads", ""));
+  }
+  // res.json(req.files);
+  res.json(uploadedFiles);
 });
 
 app.listen(4000, () => {
