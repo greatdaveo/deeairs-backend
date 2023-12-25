@@ -1,15 +1,15 @@
 const mongoose = require("mongoose");
 
 const LocationSchema = new mongoose.Schema({
-  locationOwner: { type: mongoose.Schema.Types.ObjectsId, ref: "User" },
+  locationOwner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   title: String,
   address: String,
-  photos: String,
+  addedPhotos: [String],
   description: String,
   features: [String],
   extraInfo: String,
-  checkIn: Number,
-  checkOut: Number,
+  checkIn: String,
+  checkOut: String,
   maxGuests: Number,
 });
 

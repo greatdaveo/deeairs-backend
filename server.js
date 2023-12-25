@@ -13,6 +13,7 @@ const fs = require("fs");
 
 // To import the models
 const UserModel = require("./models/User");
+const LocationModel = require("./models/LocationModel");
 
 const app = express();
 // To encrypt the password
@@ -138,6 +139,44 @@ app.post("/upload", photoMiddleware.array("photos", 100), (req, res) => {
   }
   // res.json(req.files);
   res.json(uploadedFiles);
+});
+
+// To Submit Location Form
+app.post("/locations", (req, res) => {
+  const { token } = req.cookies;
+
+  const {
+    title,
+    address,
+    addedPhotos,
+    description,
+    features,
+    extraInfo,
+    checkIn,
+    checkOut,
+    maxGuests,
+  } = req.body;
+
+  // console.log(req.body);
+
+  jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+    if (err) throw err;
+
+    const locationDoc = await LocationModel.create({
+      locationOwner: cookieData.id,
+      title,
+      address,
+      addedPhotos,
+      description,
+      features,
+      extraInfo,
+      checkIn,
+      checkOut,
+      maxGuests,
+    });
+
+    res.json(locationDoc);
+  });
 });
 
 app.listen(4000, () => {
