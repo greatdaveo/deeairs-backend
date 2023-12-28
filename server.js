@@ -141,7 +141,7 @@ app.post("/upload", photoMiddleware.array("photos", 100), (req, res) => {
   res.json(uploadedFiles);
 });
 
-// To Submit Location Form
+// To Submit Location Form To the Database
 app.post("/locations", (req, res) => {
   const { token } = req.cookies;
 
@@ -163,7 +163,7 @@ app.post("/locations", (req, res) => {
     if (err) throw err;
 
     const locationDoc = await LocationModel.create({
-      locationOwner: cookieData.id,
+      locationOwner: cookieData._id,
       title,
       address,
       addedPhotos,
@@ -178,6 +178,17 @@ app.post("/locations", (req, res) => {
     res.json(locationDoc);
   });
 });
+
+  // To GET THE LOCATION FORM DATA TO DISPLAY IN THE BROWSER
+  app.get("/locations", (req, res) => {
+    const {token} = req.cookies;
+    jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+      const {_id} = cookieData
+      const locationOwner = await LocationModel.find({ owner: _id });
+      
+      res.json(locationOwner);
+    })
+  })
 
 app.listen(4000, () => {
   console.log("Server is running on port 4000!!!");
