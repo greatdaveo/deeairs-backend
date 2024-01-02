@@ -181,14 +181,68 @@ app.post("/locations", (req, res) => {
 
   // To GET THE LOCATION FORM DATA TO DISPLAY IN THE BROWSER
   app.get("/locations", (req, res) => {
-    const {token} = req.cookies;
+    const { token } = req.cookies;
+    console.log("Token:", token);
     jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
-      const {_id} = cookieData
+      const { _id } = cookieData;
       const locationOwner = await LocationModel.find({ owner: _id });
-      
+
       res.json(locationOwner);
-    })
-  })
+    });
+  });
+
+  // To Edit an Existing Location Data
+  app.get("/locations/:id", async (req, res) => {
+    // res.json(req.params)
+    const { id } = req.params;
+    const userData = await LocationModel.findById(id);
+
+    res.json(userData);
+  });
+
+  // To Update the Edited Location Data
+  app.put("/locations/:id", (req, res) => {
+    const { token } = req.cookies;
+    const {
+      id,
+      locationData: {
+        title,
+        address,
+        addedPhotos,
+        description,
+        features,
+        extraInfo,
+        checkIn,
+        checkOut,
+        maxGuests,
+      },
+    } = req.body;
+
+    jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+      if (err) throw err;
+      const locationDoc = await LocationModel.findById(id);
+      // console.log(cookieData.id)
+      // console.log(locationDoc.locationOwner)
+
+      if (cookieData.id === locationDoc?.locationOwner?.toString()) {
+        locationDoc.set({
+          title,
+          address,
+          addedPhotos,
+          description,
+          features,
+          extraInfo,
+          checkIn,
+          checkOut,
+          maxGuests,
+        });
+
+        await locationDoc.save();
+
+        res.json("ok");
+      }
+    });
+  });
 
 app.listen(4000, () => {
   console.log("Server is running on port 4000!!!");
