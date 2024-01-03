@@ -155,6 +155,7 @@ app.post("/locations", (req, res) => {
     checkIn,
     checkOut,
     maxGuests,
+    price,
   } = req.body;
 
   // console.log(req.body);
@@ -173,39 +174,62 @@ app.post("/locations", (req, res) => {
       checkIn,
       checkOut,
       maxGuests,
+      price,
     });
 
     res.json(locationDoc);
   });
 });
 
-  // To GET THE LOCATION FORM DATA TO DISPLAY IN THE BROWSER
-  app.get("/locations", (req, res) => {
-    const { token } = req.cookies;
-    console.log("Token:", token);
-    jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
-      const { _id } = cookieData;
-      const locationOwner = await LocationModel.find({ owner: _id });
+// To GET THE LOCATION FORM DATA TO DISPLAY IN THE BROWSER (In the user's accommodation page)
+app.get("/user-locations", (req, res) => {
+  const { token } = req.cookies;
+  // console.log("Token:", token);
 
-      res.json(locationOwner);
-    });
+  jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+    const { _id } = cookieData;
+    const locationOwner = await LocationModel.find({ owner: _id });
+
+    res.json(locationOwner);
   });
+});
 
-  // To Edit an Existing Location Data
-  app.get("/locations/:id", async (req, res) => {
-    // res.json(req.params)
-    const { id } = req.params;
-    const userData = await LocationModel.findById(id);
+// To Edit an Existing Location Data
+app.get("/locations/:id", async (req, res) => {
+  // res.json(req.params)
+  const { id } = req.params;
+  const userData = await LocationModel.findById(id);
 
-    res.json(userData);
-  });
+  res.json(userData);
+});
 
-  // To Update the Edited Location Data
-  app.put("/locations/:id", (req, res) => {
-    const { token } = req.cookies;
-    const {
-      id,
-      locationData: {
+// To Update the Edited Location Data
+app.put("/locations/:id", (req, res) => {
+  const { token } = req.cookies;
+  const {
+    id,
+    locationData: {
+      title,
+      address,
+      addedPhotos,
+      description,
+      features,
+      extraInfo,
+      checkIn,
+      checkOut,
+      maxGuests,
+      price,
+    },
+  } = req.body;
+
+  jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+    if (err) throw err;
+    const locationDoc = await LocationModel.findById(id);
+    // console.log(cookieData.id)
+    // console.log(locationDoc.locationOwner)
+
+    if (cookieData.id === locationDoc?.locationOwner?.toString()) {
+      locationDoc.set({
         title,
         address,
         addedPhotos,
@@ -215,34 +239,22 @@ app.post("/locations", (req, res) => {
         checkIn,
         checkOut,
         maxGuests,
-      },
-    } = req.body;
+        price,
+      });
 
-    jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
-      if (err) throw err;
-      const locationDoc = await LocationModel.findById(id);
-      // console.log(cookieData.id)
-      // console.log(locationDoc.locationOwner)
+      await locationDoc.save();
 
-      if (cookieData.id === locationDoc?.locationOwner?.toString()) {
-        locationDoc.set({
-          title,
-          address,
-          addedPhotos,
-          description,
-          features,
-          extraInfo,
-          checkIn,
-          checkOut,
-          maxGuests,
-        });
-
-        await locationDoc.save();
-
-        res.json("ok");
-      }
-    });
+      res.json("ok");
+    }
   });
+});
+
+// To display the location data of the user in the home page
+app.get("/locations", async (req, res) => {
+  const locationData = await LocationModel.find();
+
+  res.json(locationData);
+});
 
 app.listen(4000, () => {
   console.log("Server is running on port 4000!!!");
