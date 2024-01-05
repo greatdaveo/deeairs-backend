@@ -256,6 +256,15 @@ app.get("/locations", async (req, res) => {
   res.json(locationData);
 });
 
+// For the location single pageBreakAfter: 
+app.get("/location/:id", async (req, res) => {
+  // res.json(req.params)
+  const { id } = req.params;
+  const userData = await LocationModel.findById(id);
+
+  res.json(userData);
+});
+
 app.listen(4000, () => {
   console.log("Server is running on port 4000!!!");
 }); 
