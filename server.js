@@ -14,6 +14,7 @@ const fs = require("fs");
 // To import the models
 const UserModel = require("./models/User");
 const LocationModel = require("./models/LocationModel");
+const BookingModel = require("./models/BookingModel");
 
 const app = express();
 // To encrypt the password
@@ -145,17 +146,17 @@ app.post("/upload", photoMiddleware.array("photos", 100), (req, res) => {
 app.post("/locations", (req, res) => {
   const { token } = req.cookies;
 
-  const {
-    title,
-    address,
-    addedPhotos,
-    description,
-    features,
-    extraInfo,
-    checkIn,
-    checkOut,
-    maxGuests,
-    price,
+  const {    
+      title,
+      address,
+      addedPhotos,
+      description,
+      features,
+      extraInfo,
+      checkIn,
+      checkOut,
+      maxGuests,
+      price, 
   } = req.body;
 
   // console.log(req.body);
@@ -256,7 +257,7 @@ app.get("/locations", async (req, res) => {
   res.json(locationData);
 });
 
-// For the location single pageBreakAfter: 
+// For the location single pageBreakAfter:
 app.get("/location/:id", async (req, res) => {
   // res.json(req.params)
   const { id } = req.params;
@@ -264,6 +265,25 @@ app.get("/location/:id", async (req, res) => {
 
   res.json(userData);
 });
+
+// For the Bookings
+app.post("/booking", async (req, res) => {
+  const { location, checkIn, checkOut, maxGuests, name, mobile, price } =
+    req.body;
+
+  const bookingData = await BookingModel.create({
+    location,
+    checkIn,
+    checkOut,
+    maxGuests,
+    name,
+    mobile,
+    price,
+  });
+
+  res.json(bookingData);
+});
+
 
 app.listen(4000, () => {
   console.log("Server is running on port 4000!!!");
