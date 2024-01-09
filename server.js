@@ -189,9 +189,9 @@ app.get("/user-locations", (req, res) => {
 
   jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
     const { _id } = cookieData;
-    const locationOwner = await LocationModel.find({ owner: _id });
+    const locationDoc = await LocationModel.find({ locationOwner: _id });
 
-    res.json(locationOwner);
+    res.json(locationDoc);
   });
 });
 
@@ -267,23 +267,43 @@ app.get("/location/:id", async (req, res) => {
 });
 
 // For the Bookings
-app.post("/booking", async (req, res) => {
-  const { location, checkIn, checkOut, maxGuests, name, mobile, price } =
-    req.body;
+app.post("/booking", (req, res) => {
+  const { token } = req.cookies;
 
-  const bookingData = await BookingModel.create({
-    location,
-    checkIn,
-    checkOut,
-    maxGuests,
-    name,
-    mobile,
-    price,
+  jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+    if (err) throw err;
+
+    const { location, checkIn, checkOut, maxGuests, name, mobile, price } =
+      req.body;
+
+    const bookingData = await BookingModel.create({
+      location,
+      user: cookieData.id,
+      checkIn,
+      checkOut,
+      maxGuests,
+      name,
+      mobile,
+      price,
+    });
+
+    res.json(bookingData);
   });
-
-  res.json(bookingData);
 });
 
+// To get the Bookings data
+app.get("/bookings", (req, res) => {
+  const { token } = req.cookies;
+
+  jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+    if (err) throw err;
+
+    const bookingData = await BookingModel.find({
+      user: cookieData.id,
+    }).populate("location");
+    res.json(bookingData);
+  });
+});
 
 app.listen(4000, () => {
   console.log("Server is running on port 4000!!!");
